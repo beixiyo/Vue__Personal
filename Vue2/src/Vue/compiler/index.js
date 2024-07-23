@@ -1,6 +1,5 @@
 import parseHTML from "./parseHTML"
 import { toCamel } from "@/utils/tools"
-import { EL_TYPE, TEXT_TYPE } from "@/utils/nodeTypes"
 
 
 /**
@@ -72,10 +71,10 @@ function genChildren(children) {
 }
 
 function genChild(node) {
-    if (node.type === EL_TYPE) {
+    if (node.type === Element.ELEMENT_NODE) {
         return genCode(node)
     }
-    else if (node.type === TEXT_TYPE) {
+    else if (node.type === Element.TEXT_NODE) {
         let text = node.text
         if (!exprReg.test(text)) {
             return `_createTxt(${JSON.stringify(text)})`

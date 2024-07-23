@@ -7,6 +7,7 @@ export function addTestPassCount(testSuit, isPass) {
     if (isPass) testSuit.passLen++
     if (testSuit.len === testSuit.passLen) {
         alert('全部测试通过')
+        console.log('%c全部测试通过', 'color: #f00')
     }
 }
 

@@ -1,5 +1,4 @@
-import { TEXT_TYPE, EL_TYPE } from '@/utils/nodeTypes'
-import { singleTagElements } from '@/utils/tools'
+import { singleTagElements } from '@/utils/constants'
 
 
 const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z]*`
@@ -123,7 +122,7 @@ export default function (html) {
         }
         curParent.children.push({
             text,
-            type: TEXT_TYPE,
+            type: Element.TEXT_NODE,
             parent: curParent
         })
     }
@@ -141,6 +140,6 @@ function createAstEl(tagName, attrs) {
         attrs,
         children: [],
         parent: null,
-        type: EL_TYPE
+        type: Element.ELEMENT_NODE
     }
 }

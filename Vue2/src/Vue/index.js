@@ -1,6 +1,7 @@
-import { initApi } from "./api"
-import initLifeCycle from "./lifeCycle/initLifeCycle"
-import { initMixin } from "./render/init"
+import { initGlobalApi } from './api/initGlobalApi'
+import { initStateApi } from './api/initStateApi'
+import initLifeCycle from './lifeCycle/initLifeCycle'
+import { initMixin } from './render/init'
 
 
 export default function Vue(opts) {
@@ -9,4 +10,5 @@ export default function Vue(opts) {
 
 initMixin(Vue)
 initLifeCycle(Vue)
-initApi(Vue)
+initStateApi(Vue)
+initGlobalApi(Vue)

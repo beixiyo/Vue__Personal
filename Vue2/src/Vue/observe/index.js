@@ -63,6 +63,7 @@ export function defineReactive(tar, key, value) {
     Object.defineProperty(tar, key, {
         /**
          * 执行到这时，外部已经记录当前的组件的 Watcher
+         * 在 new Watcher 时，就已经把当前 Watcher 记录在 Dep 上了
          */
         get() {
             if (Dep.watcher) {
@@ -84,6 +85,10 @@ export function defineReactive(tar, key, value) {
     })
 }
 
+/**
+ * 递归嵌套数组响应式
+ * @param {*} arr 
+ */
 function dependArr(arr) {
     for (let i = 0; i < arr.length; i++) {
         const cur = arr[i]

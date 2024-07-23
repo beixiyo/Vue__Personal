@@ -22,10 +22,10 @@ export const isObj = obj => typeof obj === 'object' && obj !== null
 export const isStr = str => typeof str === 'string'
 export const isFn = fn => typeof fn === 'function'
 
-
 /**
- * 单闭合元素
+ * @param {string} tagName 
  */
-export const singleTagElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']
-
-
+export function isComponent(tagName) {
+    return (tagName && tagName[0] === tagName[0].toUpperCase()) ||
+        tagName.includes('-')
+}

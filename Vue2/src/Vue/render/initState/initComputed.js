@@ -1,6 +1,6 @@
-import { getType, isFn } from "@/utils/tools"
-import Watcher from "../../observe/Watcher"
-import Dep from "../../observe/Dep"
+import { getType, isFn } from '@/utils/tools'
+import Watcher from '../../observe/Watcher'
+import Dep from '../../observe/Dep'
 
 
 export default function initComputed(vm, computed) {
@@ -13,11 +13,11 @@ export default function initComputed(vm, computed) {
             throw TypeError('computed of property must be object or function')
         }
 
-        const get = isFn(c) ? c : c.get,
-            set = c.set || (() => { })
+        const getter = isFn(c) ? c : c.get,
+            setter = (c.set || (() => { })).bind(vm)
 
-        vm._computedWatcher[key] = new Watcher(vm, get, { dirty: true })
-        defineComputed(vm, key, get, set)
+        vm._computedWatcher[key] = new Watcher(vm, getter, { dirty: true })
+        defineComputed(vm, key, getter, setter)
     }
 }
 

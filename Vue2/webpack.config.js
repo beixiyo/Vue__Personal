@@ -4,7 +4,7 @@ const { resolve } = require('path'),
 /** @type {import('webpack').Configuration} */
 module.exports = {
     mode: 'development',
-    // devtool: 'source-map',
+    devtool: 'eval',
     entry: {
         main: resolve(__dirname, 'index.js')
     },

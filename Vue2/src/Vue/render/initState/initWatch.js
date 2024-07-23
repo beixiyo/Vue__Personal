@@ -5,7 +5,7 @@ export default function (vm, watch) {
         if (!Object.hasOwnProperty.call(watch, key)) continue
 
         const fn = watch[key]
-        // watch键值可以是数组 监听多个
+        // watch 键值可以是数组，监听多个
         if (Array.isArray(fn)) {
             for (const item of fn) {
                 createWatch(vm, key, item)
@@ -18,7 +18,7 @@ export default function (vm, watch) {
 }
 
 function createWatch(vm, key, fn) {
-    // watch键值是函数或者字符串
+    // watch 键值是函数或者字符串
     if (isStr(fn)) {
         fn = vm[fn]
     }

@@ -1,4 +1,4 @@
-import { isSame } from "."
+import { isSameVNode } from "."
 import { createEl } from "./createEl"
 
 
@@ -25,19 +25,27 @@ export function patch(oldNode, vNode) {
     }
     else {
         // diff
-        patchVnode(oldNode, vNode)
+        patchVNode(oldNode, vNode)
     }
 }
 
-function patchVnode(oldNode, vNode) {
-    if (!isSame(oldNode, vNode)) { // 标签和`key`都不同 直接舍弃
+/**
+ * - 不是同一个节点，直接替换
+ * - 同一个节点，比较 Tag 和 Key
+ *      - 相同则复用，并对比属性
+ *      - 不相同则创建新的
+ * 
+ * - 文本，则直接替换文本
+ */
+function patchVNode(oldNode, vNode) {
+    if (!isSameVNode(oldNode, vNode)) { // 标签和`key`都不同，直接舍弃
         const newEl = createEl(vNode)
         oldNode.el.parentNode.replaceChild(newEl, oldNode.el)
         return newEl
     }
 
     const el = vNode.el = oldNode.el
-    if (!oldNode.tagName) { // 是文本 直接替换旧节点的内容
+    if (!oldNode.tagName) { // 是文本，直接替换旧节点的内容
         if (oldNode.text !== vNode.text) {
             el.textContent = vNode.text
         }
@@ -46,6 +54,9 @@ function patchVnode(oldNode, vNode) {
     // 是标签 替换属性
     patchProps(el, vNode.data, oldNode.data)
 
+    /**
+     * 子节点比较
+     */
     const oldChildren = oldNode.children || [],
         newChildren = vNode.children || []
 
@@ -61,6 +72,11 @@ function patchVnode(oldNode, vNode) {
     }
 }
 
+/**
+ * 双端指针对比
+ * - 比较 两端头指针，相同则两个指针都向后移动
+ * - 当头指针大于尾指针，则结束，并把新的子节点插入，老的删除
+ */
 function updateChildren(el, newChildren, oldChildren) {
     let oldStIndex = 0,
         oldEndIndex = oldChildren.length - 1,
@@ -72,7 +88,7 @@ function updateChildren(el, newChildren, oldChildren) {
         newStNode = newChildren[newStIndex],
         newEndNode = newChildren[newEndIndex]
 
-    const map = createMapbyKey(oldChildren)
+    const map = createMapByKey(oldChildren)
 
     // 头指针小于尾指针
     while (oldStIndex <= oldEndIndex && newStIndex <= newEndIndex) {
@@ -82,44 +98,48 @@ function updateChildren(el, newChildren, oldChildren) {
         else if (!oldEndNode) {
             oldEndNode = oldChildren[--oldEndIndex]
         }
-        else if (isSame(oldStNode, newStNode)) {
-            patchVnode(oldStNode, newStNode)
+        // 头节点对比
+        else if (isSameVNode(oldStNode, newStNode)) {
+            patchVNode(oldStNode, newStNode)
             oldStNode = oldChildren[++oldStIndex]
             newStNode = newChildren[++newStIndex]
         }
-        else if (isSame(oldEndNode, newEndNode)) {
-            patchVnode(oldEndNode, newEndNode)
+        else if (isSameVNode(oldEndNode, newEndNode)) {
+            patchVNode(oldEndNode, newEndNode)
             oldEndNode = oldChildren[--oldEndIndex]
             newEndNode = newChildren[--newEndIndex]
         }
-        else if (isSame(oldEndNode, newStNode)) {
-            patchVnode(oldEndNode, newStNode)
+        else if (isSameVNode(oldEndNode, newStNode)) {
+            patchVNode(oldEndNode, newStNode)
             el.insertBefore(oldEndNode.el, oldStNode.el)
             oldEndNode = oldChildren[--oldEndIndex]
             newStNode = newChildren[++newStIndex]
         }
-        else if (isSame(oldStNode, newEndNode)) {
-            patchVnode(oldStNode, newEndNode)
+        else if (isSameVNode(oldStNode, newEndNode)) {
+            patchVNode(oldStNode, newEndNode)
             el.insertBefore(oldStNode.el, oldEndNode.el.nextSibling)
             oldStNode = oldChildren[++oldStIndex]
             newEndNode = newChildren[--newEndIndex]
         }
+        // 交叉比对
         else {
-            // 乱序比对
-            let moveIndex = map[newStNode.key] // 如果拿到则说明是我要移动的索引
+            let moveIndex = map[newStNode.key] // 如果拿到则说明是要移动的索引
             if (moveIndex !== undefined) {
                 let moveVnode = oldChildren[moveIndex] // 找到对应的虚拟节点 复用
                 el.insertBefore(moveVnode.el, oldStNode.el)
                 oldChildren[moveIndex] = undefined // 表示这个节点已经移动走了
-                patchVnode(moveVnode, newStNode) // 比对属性和子节点
-            } else {
+                patchVNode(moveVnode, newStNode) // 比对属性和子节点
+            }
+            else {
                 el.insertBefore(createEl(newStNode), oldStNode.el)
             }
             newStNode = newChildren[++newStIndex]
         }
     }
 
-
+    /**
+     * 添加新的节点
+     */
     if (newStIndex <= newEndIndex) {
         for (let i = newStIndex; i <= newEndIndex; i++) {
             const childEl = createEl(newChildren[i])
@@ -129,7 +149,9 @@ function updateChildren(el, newChildren, oldChildren) {
             el.insertBefore(childEl, anchor)
         }
     }
-
+    /**
+     * 删除老的节点
+     */
     if (oldStIndex <= oldEndIndex) {
         for (let i = oldStIndex; i <= oldEndIndex; i++) {
             const child = oldChildren[i]
@@ -138,7 +160,12 @@ function updateChildren(el, newChildren, oldChildren) {
     }
 }
 
-function createMapbyKey(children) {
+/**
+ * 全部对比不上，则创建映射表
+ * @example
+ * { key: index }
+ */
+function createMapByKey(children) {
     const map = {}
     children.forEach((child, index) => {
         map[child.key] = index
@@ -156,36 +183,42 @@ export function patchProps(el, newProps, oldProps) {
     const newStyle = newProps?.style,
         oldStyle = oldProps?.style
 
-    if (newStyle) {
-        for (const key in oldStyle) {
-            if (!Object.hasOwnProperty.call(oldStyle, key)) continue
-            // 新样式中没有旧样式 删除
-            if (!newStyle[key]) {
-                el.style[key] = ''
-            }
+    /**
+     * 新样式中没有旧样式，删除
+     */
+    for (const key in oldStyle) {
+        if (!Object.hasOwnProperty.call(oldStyle, key)) continue
+        if (!newStyle[key]) {
+            el.style[key] = ''
         }
     }
 
+    /**
+     * 新属性中没有旧属性，删除
+     */
     for (const key in oldProps) {
         if (!Object.hasOwnProperty.call(oldProps, key)) continue
-        // 新属性中没有旧属性 删除
         if (!newProps[key]) {
             el.removeAttribute(key)
         }
     }
 
-    for (const key in newProps) { // 新的覆盖旧属性
+    /**
+     * 新的覆盖旧属性
+     */
+    for (const key in newProps) {
         if (!Object.hasOwnProperty.call(newProps, key)) continue
+
         if (key === 'style') {
             for (const styleName in newProps.style) {
                 if (!Object.hasOwnProperty.call(newProps.style, styleName)) continue
                 el.style[styleName] = newProps.style[styleName]
             }
-        } 
+        }
         else {
             el.setAttribute(key, newProps[key])
         }
     }
-    
+
     return el
 }

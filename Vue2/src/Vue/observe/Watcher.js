@@ -15,29 +15,31 @@ export default class Watcher {
      * 视图渲染函数
      */
     getter
+    /** 计算属性值 */
+    value
 
     /** 是否立刻执行 */
     lazy
     /** 配置项 */
     opts
-    /** 回调函数 */
-    cb
+    /** watch 的回调函数 */
+    watchCallback
     /** 响应式属性的 Dep */
     deps = new Set()
 
     /**
-     * - 收集组件渲染函数
+     * - 收集组件渲染函数，或者当作计算属性使用
      * - 每个组件有一个 Watcher
      * - 每个 Watcher 有 n 个 Dep
      * 
      * @param {*} vm Vue 实例
      * @param {*} fn 渲染函数、计算属性函数、watch 键值
      * @param {{ dirty: boolean; isWatch: boolean }} opts 配置项
-     * @param {*} cb 
+     * @param {*} watchCallback 
      */
-    constructor(vm, fn, opts, cb) {
+    constructor(vm, fn, opts, watchCallback) {
         this.vm = vm
-        this.cb = cb
+        this.watchCallback = watchCallback
 
         /**
          * 键值统一转成函数，取到实例对应属性
@@ -63,6 +65,9 @@ export default class Watcher {
         popWatcher()
     }
 
+    /**
+     * 计算属性取值
+     */
     evaluate() {
         this.get()
         this.opts.dirty = false
@@ -75,13 +80,13 @@ export default class Watcher {
         this.deps.add(dep)
     }
 
+    /**
+     * 让计算属性的 Dep，也收集组件渲染 Watcher
+     */
     depend() {
         const depArr = [...this.deps]
         let i = depArr.length
         while (i--) {
-            /**
-             * 让计算属性 watcher，也收集渲染 watcher
-             */
             depArr[i].depend()
         }
     }
@@ -106,7 +111,7 @@ export default class Watcher {
         const newVal = this.value
 
         if (this.opts.isWatch) {
-            this.cb.call(this.vm, newVal, oldVal)
+            this.watchCallback.call(this.vm, newVal, oldVal)
         }
     }
 }

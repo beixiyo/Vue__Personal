@@ -7,7 +7,7 @@ import { addTestPassCount, assert } from './assert'
 export function watchTest(app, testSuit) {
     app.$watch(
         () => app.nameAndAge,
-        (newVal, oldVal) => {
+        function (newVal, oldVal) {
             console.log('watch 监听计算属性成功：', { newVal, oldVal, self: this })
         }
     )
