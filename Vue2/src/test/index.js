@@ -1,0 +1,5 @@
+export * from './reactiveAndDiff.test'
+export * from './nextTick.test'
+export * from './computed.test'
+export * from './watch.test'
+export * from './method.test'

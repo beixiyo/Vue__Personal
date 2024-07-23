@@ -1,4 +1,7 @@
-const methods = [
+/**
+ * 被重写的方法
+ */
+const modMethods = [
     'push',
     'pop',
     'shift',
@@ -6,34 +9,37 @@ const methods = [
     'splice',
     'reverse',
     'sort',
-];
+]
 
 const rawArrProto = Array.prototype,
-    newArrProto = Object.create(rawArrProto);
+    newArrProto = Object.create(rawArrProto)
 
-methods.forEach((m) => {
+modMethods.forEach((m) => {
     newArrProto[m] = function (...args) {
-        let observeArgs;
+        let observeArgs
         const ob = this.__ob__,
-            res = rawArrProto[m].apply(this, args);
+            res = rawArrProto[m].apply(this, args)
 
         switch (m) {
             case 'push':
             case 'unshift':
-                observeArgs = args;
-                break;
+                observeArgs = args
+                break
             case 'splice':
-                observeArgs = args.slice(2);
-                break;
+                observeArgs = args.slice(2)
+                break
 
             default:
-                break;
+                break
         }
 
-        ob.observeArr(observeArgs);
-        ob.dep.notify();
-        return res;
-    };
-});
+        ob.observeArr(observeArgs)
+        /**
+         * 更新页面
+         */
+        ob.dep.notify()
+        return res
+    }
+})
 
-export default newArrProto;
+export default newArrProto

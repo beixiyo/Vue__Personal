@@ -1,6 +1,7 @@
 const { resolve } = require('path'),
-    HtmlWebpackPlugin = require('html-webpack-plugin');
+    HtmlWebpackPlugin = require('html-webpack-plugin')
 
+/** @type {import('webpack').Configuration} */
 module.exports = {
     mode: 'development',
     // devtool: 'source-map',
@@ -29,5 +30,4 @@ module.exports = {
         open: true,
         hot: true,
     }
-
-};
+}
