@@ -3,7 +3,7 @@ import { TrackTypes, TriggerTypes } from './optType.js'
 
 let shouldTrack = true,
     activeEffect = null
-    
+
 const effectStack = []
 const ITERATE_KEY = Symbol('iterateKey')
 
@@ -35,7 +35,7 @@ const triggerTypeMap = {
 /**
  * 执行函数并收集其中的响应式数据
  * @param {Function} fn 收集的函数，通常是 reactive 的 getter 函数，此函数执行时，activeEffect 已经赋值，可以进行依赖收集
- * @param {{ lazy: boolean, scheduler: (effect: Function) => void }} opt
+ * @param {{ lazy: boolean, scheduler: (effect: Function) => void }} opt scheduler 是在 trigger 调用的
  */
 export function effect(fn, opt = {}) {
     const { lazy = false } = opt

@@ -2,7 +2,8 @@ import {
     ref,
     computed,
     effect,
-    reactive
+    reactive,
+    watch
 } from './reactive/index.js'
 
 
@@ -16,20 +17,20 @@ const obj = {
 }
 const arr = [1, obj]
 
-const state = reactive(obj);
+const state = reactive(obj)
 
 
 /** ----------------------------------------------------------------------------
  * 防重复测试
  */
-(() => {
+{
     const s2 = reactive(state)
     const s3 = reactive(obj)
 
     assert('防重复', () => {
         return state === s2 && state === s3
     })
-})();
+}
 
 
 /** ---------------------------------------------------------------------------
@@ -45,7 +46,7 @@ const state = reactive(obj);
         arrState.length = 0
         return true
     })
-})();
+})()
 
 
 /** ---------------------------------------------------------------------------
@@ -53,7 +54,7 @@ const state = reactive(obj);
  * 当改变`state.name`后 则抛弃旧的依赖(state.age)
  * 下次再改动`state.age`时 无需触发更新 所以总共触发*2*次执行
  */
-(() => {
+{
     function effectFn() {
         console.log('effectFn')
         if (state.name === 'cjl') {
@@ -67,16 +68,14 @@ const state = reactive(obj);
 
     state.name = 'new Name'
     state.age = 24
-    assert('effect 依赖判断', () => {
-        return true
-    })
-})();
+    assert('effect 依赖判断', () => true)
+}
 
 
 /** ---------------------------------------------------------------------------
  * 函数嵌套测试
  */
-(() => {
+{
     const state2 = reactive({ name: 'CJL', age: 1 })
     function effectFnNest() {
         console.log('outter')
@@ -91,16 +90,14 @@ const state = reactive(obj);
     effect(effectFnNest)
     state2.name = 'new2 Name'
 
-    assert('effect 函数嵌套测试', () => {
-        return true
-    })
-})();
+    assert('effect 函数嵌套测试', () => true)
+}
 
 
 /** ---------------------------------------------------------------------------
  * 递归测试
  */
-(() => {
+{
     const state3 = reactive({ name: 'CJL', age: 1 })
     /** 递归(同时读取和设置) & 配置 测试 */
     function recursive() {
@@ -117,16 +114,14 @@ const state = reactive(obj);
     })()
     state3.age++
 
-    assert('effect 递归设置', () => {
-        return true
-    })
-})();
+    assert('effect 递归设置', () => true)
+}
 
 
 /** ---------------------------------------------------------------------------
  * ref 测试
  */
-(() => {
+{
     const val = ref(1)
     effect(() => {
         console.log('ref...')
@@ -134,16 +129,14 @@ const state = reactive(obj);
     })
 
     val.value++
-    assert('ref', () => {
-        return true
-    })
-})();
+    assert('ref', () => true)
+}
 
 
 /** ---------------------------------------------------------------------------
  * computed 缓存测试
  */
-(() => {
+{
     const sum = computed(() => {
         console.log('computed执行中')
         return state.age + state.height
@@ -160,16 +153,14 @@ const state = reactive(obj);
     })
     state.age++
 
-    assert('computed缓存', () => {
-        return true
-    })
-})();
+    assert('computed缓存', () => true)
+}
 
 
 /** ---------------------------------------------------------------------------
  * ref 放入 reactive 解包测试
  */
-(() => {
+{
     const refVal = ref(1),
         o = reactive({
             refVal,
@@ -178,11 +169,46 @@ const state = reactive(obj);
 
     console.log(o)
 
-    assert('自动解包', () => {
-        return o.refVal === 1
-    })
-})()
+    assert('自动解包', () => o.refVal === 1)
+}
 
+
+/** ---------------------------------------------------------------------------
+ * watch 测试
+ */
+{
+    const reactiveObj = reactive({
+        x: 1,
+        immediate: 2
+    })
+
+    watch(() => reactiveObj.x, (prevVal, oldVal) => {
+        console.log('watch test', { prevVal, oldVal })
+    })
+    setTimeout(() => {
+        reactiveObj.x++
+        reactiveObj.x++
+    }, 100)
+
+
+    watch(() => reactiveObj.immediate, (prevVal, oldVal) => {
+        console.log('immediate test', { prevVal, oldVal })
+    }, {
+        immediate: true
+    })
+
+
+    const val = ref(1)
+    watch(val, (prevVal, oldVal) => {
+        console.log('watch ref', { prevVal, oldVal })
+    })
+    setTimeout(() => {
+        val.value++
+        val.value++
+    }, 100)
+
+    assert('watch', () => true)
+}
 
 
 function assert(msg, fn, log = true) {

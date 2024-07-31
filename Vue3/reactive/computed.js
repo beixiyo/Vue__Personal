@@ -12,7 +12,7 @@ export function computed(getterOrOpt) {
 
     const effectFn = effect(getter, {
         lazy: true,
-        /** 依赖属性变了时 设置藏值 并触发依赖值更新 */
+        /** 依赖属性变了时，设置脏值，并触发依赖值更新 */
         scheduler() {
             dirty = true
             trigger(target, TriggerTypes.SET, 'value')
@@ -25,8 +25,8 @@ export function computed(getterOrOpt) {
             if (dirty) {
                 value = effectFn()
                 dirty = false
-                return value
             }
+            
             return value
         },
         set value(newVal) {
@@ -44,7 +44,8 @@ function normalize(getterOrOpt) {
         setter = () => {
             console.warn('computed is not has setter')
         }
-    } else {
+    }
+    else {
         getter = getterOrOpt.get
         setter = getterOrOpt.set
     }
