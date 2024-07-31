@@ -3,10 +3,14 @@ import { TrackTypes, TriggerTypes } from './optType.js'
 
 let shouldTrack = true,
     activeEffect = null
+    
 const effectStack = []
 const ITERATE_KEY = Symbol('iterateKey')
+
 /**
- * @example targetMap: {
+ * @example 
+ * ```js
+ * targetMap: {
  *     [Object(原始对象)] => {
  *         propName(属性名) => {
  *             get(操作类型) => Set([fn1, fn2...]),
@@ -15,29 +19,56 @@ const ITERATE_KEY = Symbol('iterateKey')
  *         }
  *     }
  * }
+ * ```
  */
 const targetMap = new WeakMap()
 
+/** 
+ * 操作的关联关系
+ */
+const triggerTypeMap = {
+    [TriggerTypes.SET]: [TrackTypes.GET],
+    [TriggerTypes.DELETE]: [TrackTypes.GET, TrackTypes.ITERATE, TrackTypes.HAS],
+    [TriggerTypes.ADD]: [TrackTypes.GET, TrackTypes.ITERATE, TrackTypes.HAS],
+}
+
 /**
  * 执行函数并收集其中的响应式数据
- * @param {Function} fn
- * @param {{
- *      lazy: boolean,
- *      scheduler: (effect: Function) => void
- * }} opt
+ * @param {Function} fn 收集的函数，通常是 reactive 的 getter 函数，此函数执行时，activeEffect 已经赋值，可以进行依赖收集
+ * @param {{ lazy: boolean, scheduler: (effect: Function) => void }} opt
  */
 export function effect(fn, opt = {}) {
     const { lazy = false } = opt
     const effectFn = () => {
         try {
+            /**
+             * 这里必须是 `activeEffect = effectFn`
+             * 用来把上一个函数存起来
+             * 
+             * 而不是 @example
+             * ```js
+             * activeEffect = fn
+             * fn()
+             * activeEffect = null
+             * ```
+             * 
+             * 如果是上面这种写法，那么下次 `effect`函数执行时，就找不到回调函数 fn 了
+             */
             activeEffect = effectFn
+
             effectStack.push(effectFn)
-            // 每次执行前 清空当前函数 重新收集最新依赖 解决函数内 响应式数据条件判断问题
+            /**
+             * 每次执行前，清空当前函数，重新收集最新依赖
+             * 解决函数内，响应式数据条件判断问题
+             */
             clearDep(effectFn)
             return fn()
         }
         finally {
-            // 执行栈解决函数嵌套时 内部函数执行完清空`activeEffect`的问题
+            /**
+             * 执行栈解决函数嵌套时，内部函数执行完清空 `activeEffect` 的问题
+             * 可以模拟嵌套作用域
+             */
             effectStack.pop()
             activeEffect = effectStack.at(-1)
         }
@@ -47,14 +78,15 @@ export function effect(fn, opt = {}) {
     effectFn.opt = opt
     if (lazy) {
         return effectFn
-    } else {
+    } 
+    else {
         return effectFn()
     }
 }
 
 /**
- * 每次执行前 清空当前函数 重新收集最新依赖
- * 解决函数内 响应式数据条件判断问题
+ * 每次执行前，清空当前函数，重新收集最新依赖
+ * 解决函数内，响应式数据条件判断问题
  * @param {Function} effectFn
  */
 export function clearDep(effectFn) {
@@ -73,7 +105,7 @@ export function clearDep(effectFn) {
  * @returns
  */
 export function track(target, type, key) {
-    // 执行`effct`时 函数中的响应式数据`getter`会触发这里的收集依赖
+    // 执行 `effct` 时，函数中的响应式数据 `getter` 会触发这里的收集依赖
     if (!shouldTrack || !activeEffect) return
 
     let propMap = targetMap.get(target)
@@ -117,7 +149,7 @@ export function trigger(target, type, key) {
     const effectFnSet = getEffectFnSet(target, key, type)
 
     effectFnSet?.forEach((fn) => {
-        // 当依赖收集中 不要触发 避免递归
+        // 当依赖收集中，不要触发，避免递归
         if (fn === activeEffect) return
 
         const { scheduler } = fn.opt
@@ -137,14 +169,9 @@ export function resumeTrack() {
     shouldTrack = true
 }
 
-/** 操作关联关系 */
-const triggerTypeMap = {
-    [TriggerTypes.SET]: [TrackTypes.GET],
-    [TriggerTypes.DELETE]: [TrackTypes.GET, TrackTypes.ITERATE, TrackTypes.HAS],
-    [TriggerTypes.ADD]: [TrackTypes.GET, TrackTypes.ITERATE, TrackTypes.HAS],
-}
+
 /**
- * 返回依赖函数`Set`集合
+ * 返回依赖函数 `Set` 集合
  * @param {Object} target
  * @param {String} key
  * @param {String} type

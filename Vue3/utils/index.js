@@ -1,5 +1,5 @@
 export function isObject(target) {
-    return target !== null && typeof target === 'object';
+    return target !== null && typeof target === 'object'
 }
 
 export function hasChange(v1, v2) {

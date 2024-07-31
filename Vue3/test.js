@@ -3,7 +3,7 @@ import {
     computed,
     effect,
     reactive
-} from './reactive'
+} from './reactive/index.js'
 
 
 const obj = {
@@ -48,7 +48,7 @@ const state = reactive(obj);
 })();
 
 
-/**
+/** ---------------------------------------------------------------------------
  * 条件判断改变依赖测试
  * 当改变`state.name`后 则抛弃旧的依赖(state.age)
  * 下次再改动`state.age`时 无需触发更新 所以总共触发*2*次执行
@@ -73,9 +73,11 @@ const state = reactive(obj);
 })();
 
 
+/** ---------------------------------------------------------------------------
+ * 函数嵌套测试
+ */
 (() => {
     const state2 = reactive({ name: 'CJL', age: 1 })
-    /** 函数嵌套测试 */
     function effectFnNest() {
         console.log('outter')
         effect(() => {
@@ -95,6 +97,9 @@ const state = reactive(obj);
 })();
 
 
+/** ---------------------------------------------------------------------------
+ * 递归测试
+ */
 (() => {
     const state3 = reactive({ name: 'CJL', age: 1 })
     /** 递归(同时读取和设置) & 配置 测试 */
@@ -118,7 +123,9 @@ const state = reactive(obj);
 })();
 
 
-/** `ref`测试 */
+/** ---------------------------------------------------------------------------
+ * ref 测试
+ */
 (() => {
     const val = ref(1)
     effect(() => {
@@ -133,7 +140,9 @@ const state = reactive(obj);
 })();
 
 
-/** `computed`缓存测试 */
+/** ---------------------------------------------------------------------------
+ * computed 缓存测试
+ */
 (() => {
     const sum = computed(() => {
         console.log('computed执行中')
@@ -157,7 +166,9 @@ const state = reactive(obj);
 })();
 
 
-/** ref 放入 reactive 解包测试 */
+/** ---------------------------------------------------------------------------
+ * ref 放入 reactive 解包测试
+ */
 (() => {
     const refVal = ref(1),
         o = reactive({
