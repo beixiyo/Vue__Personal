@@ -1,15 +1,15 @@
-import { defineNoEnum } from "../../utils/tools";
+import { defineNoEnum } from "../../utils/tools"
 
 export default function (vm) {
-    const methods = vm.$options.methods;
+    const methods = vm.$options.methods
     if (!methods) {
-        return;
+        return
     }
 
     for (const key in methods) {
-        if (!Object.hasOwnProperty.call(methods, key)) continue;
+        if (!Object.hasOwnProperty.call(methods, key)) continue
 
-        const m = methods[key];
-        defineNoEnum(vm, key, m.bind(vm));
+        const m = methods[key]
+        defineNoEnum(vm, key, m.bind(vm))
     }
 }
